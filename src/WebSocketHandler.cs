@@ -30,7 +30,6 @@ namespace Zergatul.Obs.InputOverlay
             _logger = logger;
 
             _input.ButtonAction += OnButtonAction;
-            _input.MoveAction += OnMoveAction;
             _input.DeviceAction += OnDeviceAction;
         }
 
@@ -74,53 +73,6 @@ namespace Zergatul.Obs.InputOverlay
             catch (Exception ex)
             {
                 _logger?.LogError($"OnButtonAction exception: {ex.Message}.");
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
-            }
-        }
-
-        private async void OnMoveAction(MoveEvent evt)
-        {
-            EventCategory category = GetCategory(evt);
-            using var copy = GetWebsockets(category);
-            if (copy.Count == 0)
-            {
-                return;
-            }
-
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(256);
-            try
-            {
-                // TODO: stop allocations
-                var bufferWriter = new StaticSizeArrayBufferWriter(buffer);
-                using (var writer = new Utf8JsonWriter(bufferWriter))
-                {
-                    SerializeMoveEvent(writer, evt, category);
-                }
-
-                for (int i = 0; i < copy.Count; i++)
-                {
-                    var wrapper = copy.Array[i];
-                    if (wrapper.EventCategoryMask.HasFlag(category))
-                    {
-                        try
-                        {
-                            // TODO: can this be done in parallel?
-                            await wrapper.WebSocket.SendAsync(bufferWriter.GetWritten(), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
-                        catch (WebSocketException)
-                        {
-                            _logger?.LogInformation("WebSocketException on SendAsync.");
-                            RemoveWebSocket(wrapper);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError($"OnMoveAction exception: {ex.Message}.");
             }
             finally
             {
@@ -482,32 +434,6 @@ namespace Zergatul.Obs.InputOverlay
             writer.WriteEndObject();
         }
 
-        private void SerializeMoveEvent(Utf8JsonWriter writer, MoveEvent evt, EventCategory category)
-        {
-            writer.WriteStartObject();
-            switch (category)
-            {
-                case EventCategory.RawMouseMovement:
-                    writer.WritePropertyName("type");
-                    writer.WriteStringValue(nameof(EventCategory.RawMouseMovement));
-                    writer.WriteNumber("dx", evt.X);
-                    writer.WriteNumber("dy", evt.Y);
-                    break;
-
-                case EventCategory.MouseMovement:
-                    writer.WritePropertyName("type");
-                    writer.WriteStringValue(nameof(EventCategory.MouseMovement));
-                    writer.WriteNumber("dx", evt.X);
-                    writer.WriteNumber("dy", evt.Y);
-                    break;
-
-                default:
-                    throw new NotImplementedException();
-            }
-
-            writer.WriteEndObject();
-        }
-
         private void SerializeDeviceEvent(Utf8JsonWriter writer, DeviceEvent evt)
         {
             writer.WriteStartObject();
@@ -515,42 +441,8 @@ namespace Zergatul.Obs.InputOverlay
             writer.WriteString("hDevice", evt.Device.HDeviceStr);
             writer.WriteBoolean("attached", evt.Attached);
 
-            //if (evt.Attached)
-            //{
-            //    if (evt.Device is RawGamepadDevice gamepad)
-            //    {
-            //        writer.WritePropertyName("axes");
-            //        writer.WriteStartObject();
-
-            //        foreach (Axis axis in gamepad.Axes.Values)
-            //        {
-            //            writer.WritePropertyName(axis.Index.ToString());
-
-            //            writer.WriteStartObject();
-            //            writer.WriteNumber("index", axis.Index);
-            //            writer.WriteNumber("collection", axis.LinkCollection);
-            //            writer.WriteNumber("min", axis.LogicalMin & axis.BitMask);
-            //            writer.WriteNumber("max", axis.LogicalMax & axis.BitMask);
-            //            writer.WriteNumber("value", axis.Value);
-            //            writer.WriteEndObject();
-            //        }
-
-            //        writer.WriteEndObject();
-            //    }
-            //}
-
             writer.WriteEndObject();
         }
-
-        //private void SerializeAxisEvent(Utf8JsonWriter writer, AxisEvent evt)
-        //{
-        //    writer.WriteStartObject();
-        //    writer.WriteString("type", nameof(EventCategory.RawInputGamepadAxes));
-        //    writer.WriteString("hDevice", evt.Gamepad.HDeviceStr);
-        //    writer.WriteNumber("index", evt.Axis.Index);
-        //    writer.WriteNumber("value", evt.Axis.Value);
-        //    writer.WriteEndObject();
-        //}
 
         private static EventCategory GetCategory(string category)
         {
@@ -575,26 +467,6 @@ namespace Zergatul.Obs.InputOverlay
             if (evt.MouseButton != MouseButton.None)
             {
                 return EventCategory.MouseButtons;
-            }
-
-            //if (evt.GamepadButton != null)
-            //{
-            //    return EventCategory.RawInputGamepadButtons;
-            //}
-
-            throw new InvalidOperationException("Unknown category.");
-        }
-
-        private static EventCategory GetCategory(MoveEvent evt)
-        {
-            if (evt.Source == MoveEventSource.RawMouse)
-            {
-                return EventCategory.RawMouseMovement;
-            }
-
-            if (evt.Source == MoveEventSource.Mouse)
-            {
-                return EventCategory.MouseMovement;
             }
 
             throw new InvalidOperationException("Unknown category.");
