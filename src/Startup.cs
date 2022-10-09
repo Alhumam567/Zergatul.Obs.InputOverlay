@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net;
 using Zergatul.Obs.InputOverlay.RawInput;
 using Zergatul.Obs.InputOverlay.RawInput.Device;
-using Zergatul.Obs.InputOverlay.XInput;
 
 namespace Zergatul.Obs.InputOverlay
 {
@@ -19,7 +18,6 @@ namespace Zergatul.Obs.InputOverlay
             services.AddSingleton<IWebSocketHandler, WebSocketHandler>();
             services.AddSingleton<IRawDeviceInput, RawDeviceInput>();
             services.AddSingleton<IRawDeviceFactory, RawDeviceFactory>();
-            services.AddSingleton<IXInputHandler, XInputHandler>();
 
             services.AddLogging(builder =>
             {

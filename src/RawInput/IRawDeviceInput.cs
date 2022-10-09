@@ -10,7 +10,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
         IReadOnlyDictionary<IntPtr, RawDevice> Devices { get; }
         event Action<ButtonEvent> ButtonAction;
         event Action<MoveEvent> MoveAction;
-        event Action<AxisEvent> AxisAction;
+        //event Action<AxisEvent> AxisAction;
         event Action<DeviceEvent> DeviceAction;
     }
 }
