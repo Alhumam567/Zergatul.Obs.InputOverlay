@@ -32,7 +32,6 @@ namespace Zergatul.Obs.InputOverlay
             _input.ButtonAction += OnButtonAction;
             _input.MoveAction += OnMoveAction;
             _input.DeviceAction += OnDeviceAction;
-            //_input.AxisAction += OnAxisAction;
         }
 
         private async void OnButtonAction(ButtonEvent evt)
@@ -166,49 +165,6 @@ namespace Zergatul.Obs.InputOverlay
                 _logger?.LogError($"OnDeviceAction exception: {ex.Message}.");
             }
         }
-        
-        //private async void OnAxisAction(AxisEvent evt)
-        //{
-        //    using var copy = GetWebsockets(EventCategory.RawInputGamepadAxes);
-        //    if (copy.Count == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    byte[] buffer = ArrayPool<byte>.Shared.Rent(256);
-        //    try
-        //    {
-        //        // TODO: stop allocations
-        //        var bufferWriter = new StaticSizeArrayBufferWriter(buffer);
-        //        using (var writer = new Utf8JsonWriter(bufferWriter))
-        //        {
-        //            SerializeAxisEvent(writer, evt);
-        //        }
-
-        //        for (int i = 0; i < copy.Count; i++)
-        //        {
-        //            var wrapper = copy.Array[i];
-        //            try
-        //            {
-        //                // TODO: can this be done in parallel?
-        //                await wrapper.WebSocket.SendAsync(bufferWriter.GetWritten(), WebSocketMessageType.Text, true, CancellationToken.None);
-        //            }
-        //            catch (WebSocketException)
-        //            {
-        //                _logger?.LogInformation("WebSocketException on SendAsync.");
-        //                RemoveWebSocket(wrapper);
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger?.LogError($"OnAxisAction exception: {ex.Message}.");
-        //    }
-        //    finally
-        //    {
-        //        ArrayPool<byte>.Shared.Return(buffer);
-        //    }
-        //}
 
         public async Task HandleWebSocket(WebSocket ws)
         {
@@ -331,18 +287,6 @@ namespace Zergatul.Obs.InputOverlay
                                         devices.Add(device);
                                     }
                                 }
-                                //foreach (var device in devices)
-                                //{
-                                //    if (device is RawGamepadDevice)
-                                //    {
-                                //        var bufferWriter = new ArrayBufferWriter<byte>();
-                                //        using (var writer = new Utf8JsonWriter(bufferWriter))
-                                //        {
-                                //            SerializeDeviceEvent(writer, new DeviceEvent(device, true));
-                                //        }
-                                //        await wrapper.WebSocket.SendAsync(bufferWriter.WrittenMemory, WebSocketMessageType.Text, true, CancellationToken.None);
-                                //    }
-                                //}
                             }
                         }
                     }

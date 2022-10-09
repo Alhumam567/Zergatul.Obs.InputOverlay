@@ -1,0 +1,15 @@
+﻿body {
+    background-color: black; /* uncomment to this to debug in browser */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+div.mouse {
+    display: inline-block;
+    margin: 10px;
+}
+
+div.mouse > object {
+    width: 200px;
+}
