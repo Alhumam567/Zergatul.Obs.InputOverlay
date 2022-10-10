@@ -234,7 +234,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
 
             bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0;
             bool held = pressed && !kbReleased[code];
-            kbReleased[code] = keyboard.Flags == RawKeyboardFlags.RI_KEY_BREAK ? true : false;
+            kbReleased[code] = !pressed;
 
             bool b =  KeyboardMapping.Dictionary.TryGetValue(code, out KeyboardButton button); 
             if (!b)
