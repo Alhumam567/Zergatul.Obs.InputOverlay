@@ -3,20 +3,25 @@ using System.Collections.Generic;
 
 namespace Zergatul.Obs.InputOverlay
 {
-    public class EnumCache<T>
+    public class EnumCache<T, V>
         where T : struct, Enum
     {
-        private readonly Dictionary<T, string> dictionary;
+        private Dictionary<T, V> dictionary;
 
-        public EnumCache()
+        public EnumCache(List<V> values)
         {
-            dictionary = new Dictionary<T, string>();
-            foreach (T value in Enum.GetValues<T>())
+            T[] ts = Enum.GetValues<T>();
+
+            if (values.Count != ts.Length) throw new ArgumentOutOfRangeException(nameof(values));
+
+            dictionary = new Dictionary<T, V>();
+            
+            for (int i = 0; i < ts.Length; i++)
             {
-                dictionary.Add(value, value.ToString());
+                dictionary.Add(ts[i], values[i]);
             }
         }
 
-        public string this[T value] => dictionary[value];
+        public V this[T value] => dictionary[value];
     }
 }

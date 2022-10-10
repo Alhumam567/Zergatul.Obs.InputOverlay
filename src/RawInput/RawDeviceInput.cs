@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -34,8 +35,8 @@ namespace Zergatul.Obs.InputOverlay.RawInput
         private IntPtr _buffer;
         private int _rawInputHeaderSize;
         private int _rawHidDataOffset;
+        private Dictionary<int, bool> kbReleased = new Dictionary<int, bool>();
         private Dictionary<IntPtr, RawDevice> _devices;
-        private bool[] _gamepadButtonsBuffer;
 
         public RawDeviceInput(IRawDeviceFactory factory, ILogger<RawDeviceInput> logger)
         {
@@ -47,13 +48,16 @@ namespace Zergatul.Obs.InputOverlay.RawInput
             _rawInputHeaderSize = Marshal.SizeOf(typeof(RAWINPUTHEADER));
             _rawHidDataOffset = Marshal.OffsetOf<RAWINPUT>(nameof(RAWINPUT.hid)).ToInt32() + Marshal.SizeOf<RAWHID>();
             _devices = new Dictionary<IntPtr, RawDevice>();
-            _gamepadButtonsBuffer = new bool[256];
 
             using (var identity = WindowsIdentity.GetCurrent())
             {
                 var principal = new WindowsPrincipal(identity);
                 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                     _logger.LogWarning("App is running under non-admin. Devices input will not work from applications running as admin.");
+            }
+
+            foreach (int i in KeyboardMapping.Dictionary.Keys) {
+                kbReleased.Add(i, true);
             }
 
             _wndThread = new Thread(ThreadFunc);
@@ -227,11 +231,18 @@ namespace Zergatul.Obs.InputOverlay.RawInput
             {
                 code |= 0xE100;
             }
-            bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0;
-            if (!KeyboardMapping.Dictionary.TryGetValue(code, out KeyboardButton button))
+
+            bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0 && kbReleased[code];
+            kbReleased[code] = keyboard.Flags == RawKeyboardFlags.RI_KEY_BREAK ? true : false;
+
+            bool b =  KeyboardMapping.Dictionary.TryGetValue(code, out KeyboardButton button); 
+            if (!b)
             {
                 button = KeyboardButton.Unknown;
             }
+            else 
+                _logger.LogDebug(button.ToString() + ", " + keyboard.Flags.ToString() + " " + pressed);
+
             ButtonAction?.Invoke(new ButtonEvent(button, new RawKeyboardEvent(keyboard), pressed));
         }
 
@@ -292,28 +303,6 @@ namespace Zergatul.Obs.InputOverlay.RawInput
                     }
                 }
             }
-        }
-
-        private void ProcessHidEvent(IntPtr hDevice, RAWHID hid)
-        {
-            RawDevice device;
-            lock (_devices)
-            {
-                if (!_devices.TryGetValue(hDevice, out device))
-                {
-                    _logger.LogWarning($"Cannot find device by hDevice={FormatIntPtr(hDevice)}.");
-                    return;
-                }
-            }
-
-            if (device == null)
-            {
-                // device was not properly initialized
-                return;
-            }
-
-            IntPtr reportPointer = _buffer + _rawHidDataOffset;
-
         }
     }
 }

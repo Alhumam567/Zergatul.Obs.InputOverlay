@@ -21,8 +21,11 @@ namespace Zergatul.Obs.InputOverlay
         private readonly ILogger _logger;
         private readonly Random _rnd = new Random();
         private readonly List<WebSocketWrapper> _webSockets = new List<WebSocketWrapper>();
-        private readonly EnumCache<KeyboardButton> _keyboardButtonCache = new EnumCache<KeyboardButton>();
-        private readonly EnumCache<MouseButton> _mouseButtonCache = new EnumCache<MouseButton>();
+        private readonly EnumCache<KeyboardButton, string> _keyboardButtonCache;
+        private readonly EnumCache<MouseButton, string> _mouseButtonCache;
+
+        private Dictionary<KeyboardButton, int> keyboardPresses;
+        private Dictionary<MouseButton, int> mousePresses;
 
         public WebSocketHandler(IRawDeviceInput input, ILogger<WebSocketHandler> logger)
         {
@@ -31,6 +34,22 @@ namespace Zergatul.Obs.InputOverlay
 
             _input.ButtonAction += OnButtonAction;
             _input.DeviceAction += OnDeviceAction;
+
+            keyboardPresses = new Dictionary<KeyboardButton, int>();
+            List<string> kbstr = new List<string>(); 
+            foreach (KeyboardButton kb in Enum.GetValues<KeyboardButton>()) {
+                kbstr.Add(kb.ToString());
+                keyboardPresses.Add(kb, 0);
+            }
+            _keyboardButtonCache = new EnumCache<KeyboardButton, string>(kbstr);
+
+            mousePresses = new Dictionary<MouseButton, int>();
+            List<string> mstr = new List<string>();
+            foreach (MouseButton mb in Enum.GetValues<MouseButton>()) {
+                mstr.Add(mb.ToString());
+                mousePresses.Add(mb, 0);
+            }
+            _mouseButtonCache = new EnumCache<MouseButton, string>(mstr);
         }
 
         private async void OnButtonAction(ButtonEvent evt)
@@ -396,18 +415,22 @@ namespace Zergatul.Obs.InputOverlay
             switch (category)
             {
                 case EventCategory.Keyboard:
+                    if (evt.Pressed == true) ++keyboardPresses[evt.KeyboardButton];
                     writer.WriteString("type", nameof(EventCategory.Keyboard));
                     writer.WriteString("button", _keyboardButtonCache[evt.KeyboardButton]);
                     writer.WriteBoolean("pressed", evt.Pressed);
+                    writer.WriteNumber("presses", keyboardPresses[evt.KeyboardButton]);
                     writer.WritePropertyName("raw");
                     writer.WriteStartObject();
                     writer.WriteNumber("makecode", evt.RawKeyboard.MakeCode);
                     writer.WriteNumber("flags", evt.RawKeyboard.Flags);
                     writer.WriteNumber("vkey", evt.RawKeyboard.VKey);
+                    _logger.LogInformation(keyboardPresses[evt.KeyboardButton].ToString());
                     writer.WriteEndObject();
                     break;
 
                 case EventCategory.MouseButtons:
+                    if (evt.Pressed == true) ++mousePresses[evt.MouseButton];
                     writer.WriteString("type", nameof(EventCategory.MouseButtons));
                     writer.WriteString("button", _mouseButtonCache[evt.MouseButton]);
                     if (evt.MouseButton == MouseButton.MouseWheelDown || evt.MouseButton == MouseButton.MouseWheelUp)
@@ -418,14 +441,9 @@ namespace Zergatul.Obs.InputOverlay
                     {
                         writer.WriteBoolean("pressed", evt.Pressed);
                     }
+                    writer.WriteNumber("presses", mousePresses[evt.MouseButton]);
+                    _logger.LogInformation(mousePresses[evt.MouseButton].ToString());
                     break;
-
-                //case EventCategory.RawInputGamepadButtons:
-                //    writer.WriteString("type", nameof(EventCategory.RawInputGamepadButtons));
-                //    writer.WriteString("hDevice", evt.Gamepad.HDeviceStr);
-                //    writer.WriteNumber("button", evt.GamepadButton.Value);
-                //    writer.WriteBoolean("pressed", evt.Pressed);
-                //    break;
 
                 default:
                     throw new NotImplementedException();

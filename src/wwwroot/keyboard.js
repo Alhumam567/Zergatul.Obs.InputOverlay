@@ -21,6 +21,9 @@
             if (element) {
                 element.classList.remove('released');
                 element.classList.add('pressed');
+
+                let n = element.lastElementChild;
+                n.innerHTML = data.presses;
             }
         } else {
             if (state[data.button]) {

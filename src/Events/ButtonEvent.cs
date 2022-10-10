@@ -11,9 +11,6 @@ namespace Zergatul.Obs.InputOverlay.Events
         public MouseButton MouseButton { get; }
         public bool Pressed { get; }
 
-        /// <summary>
-        /// For mouse scrolling
-        /// </summary>
         public int? Count { get; }
 
         public ButtonEvent(KeyboardButton button, RawKeyboardEvent rawKeyboard, bool pressed)

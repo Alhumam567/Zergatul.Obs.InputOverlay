@@ -15,8 +15,7 @@ div.container {
 }
 
 div.keyboard {
-    display: inline-block;
-    margin: 10px;
+    margin-left: 20px;
 }
 
 div.mouse {
@@ -24,9 +23,9 @@ div.mouse {
     margin: 10px;
 }
 
-    div.mouse > svg {
-        width: 200px;
-    }
+div.mouse > svg {
+    width: 200px;
+}
 
 div.button,
 div.small-button,
@@ -36,17 +35,30 @@ div.shift-button,
 div.ctrl-button,
 div.alt-button,
 div.space-button {
-    border: 2px solid white;
+    border: 1px solid white;
+    height: 50px;
+    width: 50px;
     border-radius: 4px;
     color: white;
     display: inline-block;
     font-family: Calibri;
-    font-size: 20px;
-    line-height: 40px;
-    height: 40px;
+    transform: skewX(-15deg); 
+}
+
+p.key {
+    margin: 0;
+    height: 75%;
+    font-size: 10pt;
     text-align: center;
-    width: 40px;
-    transform: skewX(-15deg);
+    line-height: 50px;
+}
+
+p.number {
+    margin: 0;
+    height: 25%;
+    text-align: right;
+    font-size: 8pt;
+    padding-right: 2px;
 }
 
 div.small-button {
