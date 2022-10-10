@@ -240,8 +240,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
             {
                 button = KeyboardButton.Unknown;
             }
-            else 
-                _logger.LogDebug(button.ToString() + ", " + keyboard.Flags.ToString() + " " + pressed);
+            _logger.LogDebug(button.ToString() + ", " + keyboard.Flags.ToString() + " " + pressed);
 
             ButtonAction?.Invoke(new ButtonEvent(button, new RawKeyboardEvent(keyboard), pressed));
         }
