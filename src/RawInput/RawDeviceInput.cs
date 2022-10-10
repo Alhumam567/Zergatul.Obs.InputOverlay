@@ -232,7 +232,8 @@ namespace Zergatul.Obs.InputOverlay.RawInput
                 code |= 0xE100;
             }
 
-            bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0 && kbReleased[code];
+            bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0;
+            bool held = pressed && !kbReleased[code];
             kbReleased[code] = keyboard.Flags == RawKeyboardFlags.RI_KEY_BREAK ? true : false;
 
             bool b =  KeyboardMapping.Dictionary.TryGetValue(code, out KeyboardButton button); 
@@ -242,7 +243,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
             }
             _logger.LogDebug(button.ToString() + ", " + keyboard.Flags.ToString() + " " + pressed);
 
-            ButtonAction?.Invoke(new ButtonEvent(button, new RawKeyboardEvent(keyboard), pressed));
+            ButtonAction?.Invoke(new ButtonEvent(button, new RawKeyboardEvent(keyboard), pressed, held));
         }
 
         private void ProcessMouseEvent(RAWMOUSE mouse)

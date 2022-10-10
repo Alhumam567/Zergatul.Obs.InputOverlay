@@ -415,7 +415,7 @@ namespace Zergatul.Obs.InputOverlay
             switch (category)
             {
                 case EventCategory.Keyboard:
-                    if (evt.Pressed == true) ++keyboardPresses[evt.KeyboardButton];
+                    if (evt.Pressed && !evt.Held == true) ++keyboardPresses[evt.KeyboardButton];
                     writer.WriteString("type", nameof(EventCategory.Keyboard));
                     writer.WriteString("button", _keyboardButtonCache[evt.KeyboardButton]);
                     writer.WriteBoolean("pressed", evt.Pressed);

@@ -158,6 +158,10 @@ function listenWebSocket() {
         } else {
             if (data.pressed) {
                 let element = svgDoc.getElementById(data.button);
+
+                let n = document.getElementById(data.button + "P");
+                n.innerHTML = data.presses;
+
                 if (element) {
                     element.style.fill = buttonColor;
                     element.style.filter = 'url(#glow)';
