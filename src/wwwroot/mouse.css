@@ -1,12 +1,14 @@
 ﻿body {
-    background-color: black; /* uncomment to this to debug in browser */
+    background-color: black;
     margin: 0;
     padding: 0;
+    width: 250px;
+    height: 400px;
+    font-family: Calibri;
     overflow: hidden;
 }
 
 div.mouse {
-    display: inline-block;
     margin: 10px;
     color: white;
 }
@@ -15,8 +17,21 @@ div.mouse > object {
     width: 220px;
 }
 
+div.labels {
+    display: flex;
+}
+
 div.numbers {
     display: flex;
+}
+
+.lbl {
+    flex: 1 1 0;
+    margin: 0 4px;
+    text-align: center;
+    font-size: 12pt;
+    font: 
+    border-radius: 4px;
 }
 
 .number {
