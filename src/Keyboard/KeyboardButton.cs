@@ -117,6 +117,15 @@ namespace Zergatul.Obs.InputOverlay.Keyboard
         Num8,
         Num9,
         NumPeriod,
-        NumEnter
+        NumEnter,
+
+        //Multimedia buttons
+        Mute,
+        VolumeDown,
+        VolumeUp,
+        Next,
+        Previous,
+        Stop,
+        PlayPause
     }
 }

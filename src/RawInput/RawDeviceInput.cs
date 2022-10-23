@@ -36,6 +36,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
         private int _rawInputHeaderSize;
         private int _rawHidDataOffset;
         private Dictionary<int, bool> kbReleased = new Dictionary<int, bool>();
+        private Dictionary<int, bool> kbMMReleased = new Dictionary<int, bool>();
         private Dictionary<IntPtr, RawDevice> _devices;
 
         public RawDeviceInput(IRawDeviceFactory factory, ILogger<RawDeviceInput> logger)
@@ -58,6 +59,11 @@ namespace Zergatul.Obs.InputOverlay.RawInput
 
             foreach (int i in KeyboardMapping.Dictionary.Keys) {
                 kbReleased.Add(i, true);
+            }
+
+            foreach (int i in KeyboardVKeyMapping.Dictionary.Keys)
+            {
+                kbMMReleased.Add(i, true);
             }
 
             _wndThread = new Thread(ThreadFunc);
@@ -133,7 +139,7 @@ namespace Zergatul.Obs.InputOverlay.RawInput
             devices = new RAWINPUTDEVICE[1];
             devices[0].usUsagePage = RawInputDeviceUsagePage.HID_USAGE_PAGE_GENERIC;
             devices[0].usUsage = RawInputDeviceUsage.HID_USAGE_GENERIC_KEYBOARD;
-            devices[0].dwFlags = RawInputDeviceFlags.RIDEV_INPUTSINK | RawInputDeviceFlags.RIDEV_DEVNOTIFY;
+            devices[0].dwFlags = RawInputDeviceFlags.RIDEV_INPUTSINK | RawInputDeviceFlags.RIDEV_DEVNOTIFY | RawInputDeviceFlags.RIDEV_NOLEGACY;
             devices[0].hwndTarget = _hWnd;
             if (!RegisterRawInputDevices(devices, 1, Marshal.SizeOf(typeof(RAWINPUTDEVICE))))
             {
@@ -232,16 +238,26 @@ namespace Zergatul.Obs.InputOverlay.RawInput
                 code |= 0xE100;
             }
 
-            bool pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0;
-            bool held = pressed && !kbReleased[code];
-            kbReleased[code] = !pressed;
+            if (code == 0xE02A)
+                return;
+
+            bool held = false, 
+                pressed = (keyboard.Flags & RawKeyboardFlags.RI_KEY_BREAK) == 0;
 
             bool b =  KeyboardMapping.Dictionary.TryGetValue(code, out KeyboardButton button); 
-            if (!b)
-            {
-                button = KeyboardButton.Unknown;
+            if (!b) {
+                if (!KeyboardVKeyMapping.Dictionary.TryGetValue(keyboard.VKey, out button))
+                    button = KeyboardButton.Unknown;
+                else {
+                    held = pressed && !kbMMReleased[keyboard.VKey];
+                    kbMMReleased[keyboard.VKey] = !pressed;
+                }
             }
-            _logger.LogDebug(button.ToString() + ", " + keyboard.Flags.ToString() + " " + pressed);
+            else {
+                held = pressed && !kbReleased[code];
+                kbReleased[code] = !pressed;
+            }
+            _logger.LogDebug("(" + code.ToString("X") +  ") [" + keyboard.VKey.ToString("X") + "] " + button.ToString() + ": " + keyboard.Flags.ToString() + ", " + pressed + ", " + held);
 
             ButtonAction?.Invoke(new ButtonEvent(button, new RawKeyboardEvent(keyboard), pressed, held));
         }

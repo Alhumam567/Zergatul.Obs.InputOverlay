@@ -360,7 +360,8 @@ namespace Zergatul.Obs.InputOverlay
             public enum RawInputDeviceFlags : uint
             {
                 RIDEV_INPUTSINK = 0x00000100,
-                RIDEV_DEVNOTIFY = 0x00002000
+                RIDEV_DEVNOTIFY = 0x00002000,
+                RIDEV_NOLEGACY = 0x00000030
             }
 
             public enum GetRawInputDataCommand : uint
